@@ -29,7 +29,11 @@ jobs:
           cache: true
 
       - name: Setup Android local.properties
-        run: echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
+        run: |
+          FLUTTER_SDK=$(dirname $(dirname $(which flutter)))
+          echo "Flutter SDK path: $FLUTTER_SDK"
+          echo "flutter.sdk=$FLUTTER_SDK" > android/local.properties
+          cat android/local.properties
 
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v4
