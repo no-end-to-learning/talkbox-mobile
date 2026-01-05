@@ -25,6 +25,9 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
+// Set Flutter source directory explicitly
+flutter.source = '../..'
+
 android {
     namespace "me.qiujun.talkbox"
     compileSdk Math.max(flutter.compileSdkVersion, rootProject.ext.compileSdkVersion)
@@ -59,10 +62,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-}
-
-flutter {
-    source '../..'
 }
 
 dependencies {}
