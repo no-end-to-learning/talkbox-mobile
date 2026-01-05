@@ -5,7 +5,7 @@ Flutter 跨平台移动客户端，支持 iOS 和 Android。
 ## 功能特性
 
 - 用户注册/登录
-- 好友管理（添加、接受、删除）
+- 用户列表（可直接发起私聊）
 - 私聊和群聊
 - 群组设置（改名、成员管理、Bot 管理）
 - 多种消息类型（文字、图片、视频、文件、卡片）
@@ -31,7 +31,7 @@ lib/
 │   ├── auth_provider.dart         # 认证状态
 │   ├── conversation_provider.dart # 会话状态
 │   ├── message_provider.dart      # 消息状态
-│   ├── friend_provider.dart       # 好友状态
+│   ├── friend_provider.dart       # 用户列表状态
 │   └── bot_provider.dart          # Bot 状态
 ├── screens/
 │   ├── login_screen.dart          # 登录页
