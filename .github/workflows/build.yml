@@ -28,8 +28,8 @@ jobs:
           channel: stable
           cache: true
 
-      - name: Export Flutter Root
-        run: echo "FLUTTER_ROOT=$FLUTTER_ROOT" >> $GITHUB_ENV
+      - name: Setup Android local.properties
+        run: echo "flutter.sdk=$FLUTTER_ROOT" > android/local.properties
 
       - name: Setup Gradle Cache
         uses: gradle/actions/setup-gradle@v4
@@ -70,9 +70,6 @@ jobs:
           flutter-version: '3.24.0'
           channel: stable
           cache: true
-
-      - name: Export Flutter Root
-        run: echo "FLUTTER_ROOT=$FLUTTER_ROOT" >> $GITHUB_ENV
 
       - name: Cache CocoaPods
         uses: actions/cache@v4
