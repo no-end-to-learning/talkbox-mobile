@@ -127,29 +127,6 @@ class ApiService {
     return response.data ?? [];
   }
 
-  // Friends
-  Future<List<dynamic>> getFriends() async {
-    final response = await _dio.get('/api/friends');
-    return response.data ?? [];
-  }
-
-  Future<List<dynamic>> getFriendRequests() async {
-    final response = await _dio.get('/api/friends/requests');
-    return response.data ?? [];
-  }
-
-  Future<void> sendFriendRequest(String userId) async {
-    await _dio.post('/api/friends/request', data: {'user_id': userId});
-  }
-
-  Future<void> acceptFriendRequest(String userId) async {
-    await _dio.post('/api/friends/accept/$userId');
-  }
-
-  Future<void> deleteFriend(String userId) async {
-    await _dio.delete('/api/friends/$userId');
-  }
-
   // Conversations
   Future<List<dynamic>> getConversations() async {
     final response = await _dio.get('/api/conversations');

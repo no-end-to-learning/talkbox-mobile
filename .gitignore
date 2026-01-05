@@ -5,6 +5,10 @@ build/
 .flutter-plugins
 .flutter-plugins-dependencies
 
+# Android
+android/.gradle/
+android/.kotlin/
+
 # IDE
 .idea/
 .vscode/
@@ -16,6 +20,8 @@ build/
 # Generated
 *.g.dart
 *.freezed.dart
+ios/Flutter/Generated.xcconfig
+android/local.properties
 
 # Test
 coverage/
