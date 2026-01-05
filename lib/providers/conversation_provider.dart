@@ -102,7 +102,7 @@ class ConversationProvider extends ChangeNotifier {
 
   void updateConversationTime(String conversationId) {
     final index = _conversations.indexWhere((c) => c.id == conversationId);
-    if (index > 0) {
+    if (index >= 0) {
       final conv = _conversations.removeAt(index);
       _conversations.insert(0, conv);
       notifyListeners();

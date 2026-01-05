@@ -47,12 +47,10 @@ class WebSocketService {
           _handleMessage(msg);
         },
         onError: (error) {
-          print('WebSocket error: $error');
           _disconnect();
           _tryReconnect();
         },
         onDone: () {
-          print('WebSocket closed');
           _disconnect();
           _tryReconnect();
         },
@@ -65,7 +63,6 @@ class WebSocketService {
         }
       });
     } catch (e) {
-      print('WebSocket connect error: $e');
       _isConnecting = false;
       _tryReconnect();
     }
@@ -102,12 +99,10 @@ class WebSocketService {
 
   void _tryReconnect() {
     if (_reconnectAttempts >= _maxReconnectAttempts || _currentToken == null) {
-      print('Max reconnect attempts reached or no token');
       return;
     }
 
     _reconnectAttempts++;
-    print('Reconnecting... attempt $_reconnectAttempts');
 
     Future.delayed(const Duration(seconds: 3), () {
       if (_currentToken != null) {

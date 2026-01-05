@@ -41,14 +41,14 @@ class Conversation {
 
 class Member {
   final String id;
-  final String viserId;
+  final String userId;
   final String role;
   final String? nickname;
   final User user;
 
   Member({
     required this.id,
-    required this.viserId,
+    required this.userId,
     required this.role,
     this.nickname,
     required this.user,
@@ -57,7 +57,7 @@ class Member {
   factory Member.fromJson(Map<String, dynamic> json) {
     return Member(
       id: json['id'] ?? '',
-      viserId: json['user_id'] ?? '',
+      userId: json['user_id'] ?? '',
       role: json['role'] ?? 'member',
       nickname: json['nickname'],
       user: User.fromJson(json['user'] ?? {}),

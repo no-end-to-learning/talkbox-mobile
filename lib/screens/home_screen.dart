@@ -199,7 +199,7 @@ class _ConversationList extends StatelessWidget {
       return conv.name.isNotEmpty ? conv.name : '群聊';
     }
     final member = conv.members?.firstWhere(
-      (m) => m.viserId != currentUserId,
+      (m) => m.userId != currentUserId,
       orElse: () => conv.members!.first,
     );
     return member?.user.nickname ?? '私聊';
