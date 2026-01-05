@@ -35,8 +35,13 @@ jobs:
           echo "flutter.sdk=$FLUTTER_SDK" >> android/local.properties
           echo "=== local.properties ==="
           cat android/local.properties
-          echo "=== Verify Flutter SDK ==="
-          ls -la "$FLUTTER_SDK/packages/flutter_tools/gradle" || echo "Gradle tools not found!"
+          echo "=== Verify Flutter SDK gradle tools ==="
+          ls "$FLUTTER_SDK/packages/flutter_tools/gradle"
+
+      - name: Clean Gradle cache
+        run: |
+          rm -rf ~/.gradle/caches/
+          rm -rf android/.gradle/
 
       - name: Get dependencies
         run: flutter pub get

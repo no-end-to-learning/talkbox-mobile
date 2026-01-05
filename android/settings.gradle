@@ -1,29 +1,21 @@
 pluginManagement {
     def flutterSdkPath = {
+        def properties = new Properties()
         def localPropertiesFile = file("local.properties")
-        if (localPropertiesFile.exists()) {
-            def properties = new Properties()
-            localPropertiesFile.withInputStream { properties.load(it) }
-            def sdkPath = properties.getProperty("flutter.sdk")
-            if (sdkPath != null) {
-                return sdkPath
-            }
+        if (!localPropertiesFile.exists()) {
+            throw new GradleException("local.properties not found. Run 'flutter pub get' first or create it manually with flutter.sdk=/path/to/flutter")
         }
-        // Fallback to FLUTTER_ROOT environment variable (used in CI)
-        def flutterRoot = System.getenv("FLUTTER_ROOT")
-        if (flutterRoot != null) {
-            return flutterRoot
+        localPropertiesFile.withInputStream { properties.load(it) }
+        def flutterSdkPath = properties.getProperty("flutter.sdk")
+        if (flutterSdkPath == null) {
+            throw new GradleException("flutter.sdk not set in local.properties")
         }
-        throw new GradleException("Flutter SDK not found. Define flutter.sdk in local.properties or set FLUTTER_ROOT environment variable.")
+        return flutterSdkPath
     }()
 
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        maven { url 'https://maven.aliyun.com/repository/public' }
-        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
         google()
         mavenCentral()
         gradlePluginPortal()
