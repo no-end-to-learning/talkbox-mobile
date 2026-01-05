@@ -23,17 +23,17 @@ if (flutterVersionName == null) {
 }
 
 android {
-    namespace "com.example.talkbox"
-    compileSdk flutter.compileSdkVersion
-    ndkVersion flutter.ndkVersion
+    namespace "me.qiujun.talkbox"
+    compileSdk Math.max(flutter.compileSdkVersion, rootProject.ext.compileSdkVersion)
+    ndkVersion flutter.ndkVersion ?: rootProject.ext.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 
     sourceSets {
@@ -42,8 +42,8 @@ android {
 
     defaultConfig {
         applicationId "me.qiujun.talkbox"
-        minSdk flutter.minSdkVersion
-        targetSdk flutter.targetSdkVersion
+        minSdk Math.max(flutter.minSdkVersion, rootProject.ext.minSdkVersion)
+        targetSdk Math.max(flutter.targetSdkVersion, rootProject.ext.targetSdkVersion)
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -51,6 +51,9 @@ android {
     buildTypes {
         release {
             signingConfig signingConfigs.debug
+            shrinkResources true
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }

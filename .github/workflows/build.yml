@@ -28,20 +28,25 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Setup Gradle Cache
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ github.ref != 'refs/heads/master' }}
+
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Build APK (split by ABI)
+        run: flutter build apk --release --split-per-abi
 
       - name: Build App Bundle
         run: flutter build appbundle --release
 
-      - name: Upload APK
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
           name: android-apk
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-*-release.apk
 
       - name: Upload AAB
         uses: actions/upload-artifact@v4
@@ -63,8 +68,19 @@ jobs:
           channel: stable
           cache: true
 
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/Pods
+          key: ${{ runner.os }}-pods-${{ hashFiles('**/Podfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pods-
+
       - name: Get dependencies
         run: flutter pub get
+
+      - name: Install CocoaPods
+        run: cd ios && pod install --repo-update
 
       - name: Build iOS (no codesign)
         run: flutter build ios --release --no-codesign
