@@ -1,32 +1,14 @@
-ext {
-    compileSdkVersion = 36
-    minSdkVersion = 24
-    targetSdkVersion = 35
-    ndkVersion = "27.0.12077973"
-}
-
 allprojects {
     repositories {
-        maven { url 'https://maven.aliyun.com/repository/google' }
-        maven { url 'https://maven.aliyun.com/repository/central' }
-        maven { url 'https://maven.aliyun.com/repository/public' }
         google()
         mavenCentral()
     }
-
-    // Provide flutter extension as a fallback for plugins that expect it
-    ext.set('flutter', [
-        compileSdkVersion: rootProject.ext.compileSdkVersion,
-        minSdkVersion: rootProject.ext.minSdkVersion,
-        targetSdkVersion: rootProject.ext.targetSdkVersion,
-        ndkVersion: rootProject.ext.ndkVersion
-    ])
 }
 
-rootProject.buildDir = '../build'
+rootProject.buildDir = "../build"
 subprojects {
     project.buildDir = "${rootProject.buildDir}/${project.name}"
-    project.evaluationDependsOn(':app')
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register("clean", Delete) {

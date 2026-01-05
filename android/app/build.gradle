@@ -1,45 +1,39 @@
+plugins {
+    id "com.android.application"
+    id "org.jetbrains.kotlin.android"
+    id "dev.flutter.flutter-gradle-plugin"
+}
+
 def localProperties = new Properties()
-def localPropertiesFile = rootProject.file('local.properties')
+def localPropertiesFile = rootProject.file("local.properties")
 if (localPropertiesFile.exists()) {
-    localPropertiesFile.withReader('UTF-8') { reader ->
-        localProperties.load(reader)
+    localPropertiesFile.withInputStream { stream ->
+        localProperties.load(stream)
     }
 }
 
-def flutterRoot = localProperties.getProperty('flutter.sdk')
-if (flutterRoot == null) {
-    throw new GradleException("Flutter SDK not found. Define flutter.sdk in local.properties.")
-}
-
-def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+def flutterVersionCode = localProperties.getProperty("flutter.versionCode")
 if (flutterVersionCode == null) {
-    flutterVersionCode = '1'
+    flutterVersionCode = "1"
 }
 
-def flutterVersionName = localProperties.getProperty('flutter.versionName')
+def flutterVersionName = localProperties.getProperty("flutter.versionName")
 if (flutterVersionName == null) {
-    flutterVersionName = '1.0'
+    flutterVersionName = "1.0"
 }
-
-apply plugin: 'com.android.application'
-apply plugin: 'kotlin-android'
-apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
-
-// Set Flutter source directory explicitly
-flutter.source = '../..'
 
 android {
-    namespace "me.qiujun.talkbox"
-    compileSdk Math.max(flutter.compileSdkVersion, rootProject.ext.compileSdkVersion)
-    ndkVersion flutter.ndkVersion ?: rootProject.ext.ndkVersion
+    namespace = "me.qiujun.talkbox"
+    compileSdk = flutter.compileSdkVersion
+    ndkVersion = flutter.ndkVersion
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_17
-        targetCompatibility JavaVersion.VERSION_17
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '17'
+        jvmTarget = JavaVersion.VERSION_17
     }
 
     sourceSets {
@@ -47,21 +41,25 @@ android {
     }
 
     defaultConfig {
-        applicationId "me.qiujun.talkbox"
-        minSdk Math.max(flutter.minSdkVersion, rootProject.ext.minSdkVersion)
-        targetSdk Math.max(flutter.targetSdkVersion, rootProject.ext.targetSdkVersion)
-        versionCode flutterVersionCode.toInteger()
-        versionName flutterVersionName
+        applicationId = "me.qiujun.talkbox"
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutterVersionCode.toInteger()
+        versionName = flutterVersionName
     }
 
     buildTypes {
         release {
-            signingConfig signingConfigs.debug
-            shrinkResources true
-            minifyEnabled true
+            signingConfig = signingConfigs.debug
+            shrinkResources = true
+            minifyEnabled = true
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+}
+
+flutter {
+    source = "../.."
 }
 
 dependencies {}
