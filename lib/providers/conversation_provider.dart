@@ -15,10 +15,11 @@ class ConversationProvider extends ChangeNotifier {
 
   Conversation? get currentConversation {
     if (_currentConversationId == null) return null;
-    return _conversations.firstWhere(
-      (c) => c.id == _currentConversationId,
-      orElse: () => _conversations.first,
-    );
+    try {
+      return _conversations.firstWhere((c) => c.id == _currentConversationId);
+    } catch (e) {
+      return null;
+    }
   }
 
   Future<void> fetchConversations() async {
@@ -57,6 +58,41 @@ class ConversationProvider extends ChangeNotifier {
     final data = await _api.startPrivateChat(userId);
     await fetchConversations();
     return data['conversation_id'];
+  }
+
+  // 群组管理
+  Future<void> updateGroup(String conversationId, {String? name}) async {
+    await _api.updateConversation(conversationId, name: name);
+    await fetchConversation(conversationId);
+  }
+
+  Future<void> dissolveGroup(String conversationId) async {
+    await _api.deleteConversation(conversationId);
+    _conversations = _conversations.where((c) => c.id != conversationId).toList();
+    if (_currentConversationId == conversationId) {
+      _currentConversationId = null;
+    }
+    notifyListeners();
+  }
+
+  Future<void> addMember(String conversationId, String userId) async {
+    await _api.addMembers(conversationId, [userId]);
+    await fetchConversation(conversationId);
+  }
+
+  Future<void> removeMember(String conversationId, String userId) async {
+    await _api.removeMember(conversationId, userId);
+    await fetchConversation(conversationId);
+  }
+
+  Future<void> addBot(String conversationId, String botId) async {
+    await _api.addBotToConversation(conversationId, botId);
+    await fetchConversation(conversationId);
+  }
+
+  Future<void> removeBot(String conversationId, String botId) async {
+    await _api.removeBotFromConversation(conversationId, botId);
+    await fetchConversation(conversationId);
   }
 
   void setCurrentConversation(String? id) {

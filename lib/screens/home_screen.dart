@@ -31,8 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final messageProvider = context.read<MessageProvider>();
 
     await conversationProvider.fetchConversations();
-    await friendProvider.fetchFriends();
-    await friendProvider.fetchRequests();
+    await friendProvider.fetchUsers();
 
     messageProvider.initWebSocket((convId) {
       conversationProvider.updateConversationTime(convId);
@@ -43,7 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(_currentIndex == 0 ? '会话' : _currentIndex == 1 ? '好友' : '设置'),
+        title: Text(_currentIndex == 0 ? '会话' : _currentIndex == 1 ? '通讯录' : '设置'),
         actions: [
           if (_currentIndex == 0)
             IconButton(
@@ -67,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         destinations: const [
           NavigationDestination(icon: Icon(Icons.chat), label: '会话'),
-          NavigationDestination(icon: Icon(Icons.people), label: '好友'),
+          NavigationDestination(icon: Icon(Icons.people), label: '通讯录'),
           NavigationDestination(icon: Icon(Icons.settings), label: '设置'),
         ],
       ),
@@ -112,6 +111,7 @@ class _ConversationList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final conversationProvider = context.watch<ConversationProvider>();
+    final messageProvider = context.watch<MessageProvider>();
     final authProvider = context.watch<AuthProvider>();
 
     if (conversationProvider.isLoading && conversationProvider.conversations.isEmpty) {
@@ -129,6 +129,8 @@ class _ConversationList extends StatelessWidget {
         itemBuilder: (context, index) {
           final conv = conversationProvider.conversations[index];
           final name = _getConversationName(conv, authProvider.user?.id);
+          final messages = messageProvider.getMessages(conv.id);
+          final lastMessage = messages.isNotEmpty ? messages.last : null;
 
           return ListTile(
             leading: CircleAvatar(
@@ -138,8 +140,21 @@ class _ConversationList extends StatelessWidget {
                 style: const TextStyle(color: Colors.white),
               ),
             ),
-            title: Text(name),
-            subtitle: Text(_formatTime(conv.updatedAt)),
+            title: Row(
+              children: [
+                Expanded(child: Text(name, overflow: TextOverflow.ellipsis)),
+                Text(
+                  _formatTime(conv.updatedAt),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+                ),
+              ],
+            ),
+            subtitle: Text(
+              lastMessage != null ? _getMessagePreview(lastMessage) : '暂无消息',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+            ),
             onTap: () {
               conversationProvider.setCurrentConversation(conv.id);
               Navigator.push(
@@ -153,6 +168,30 @@ class _ConversationList extends StatelessWidget {
         },
       ),
     );
+  }
+
+  String _getMessagePreview(dynamic message) {
+    if (message.isText) {
+      return '${message.sender.nickname}: ${message.textContent}';
+    }
+    String typeLabel = '';
+    switch (message.type) {
+      case 'image':
+        typeLabel = '[图片]';
+        break;
+      case 'video':
+        typeLabel = '[视频]';
+        break;
+      case 'file':
+        typeLabel = '[文件]';
+        break;
+      case 'card':
+        typeLabel = '[卡片]';
+        break;
+      default:
+        typeLabel = '[消息]';
+    }
+    return '${message.sender.nickname}: $typeLabel';
   }
 
   String _getConversationName(Conversation conv, String? currentUserId) {

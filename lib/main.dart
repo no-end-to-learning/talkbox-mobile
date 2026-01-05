@@ -4,6 +4,7 @@ import 'providers/auth_provider.dart';
 import 'providers/conversation_provider.dart';
 import 'providers/message_provider.dart';
 import 'providers/friend_provider.dart';
+import 'providers/bot_provider.dart';
 import 'screens/login_screen.dart';
 import 'screens/home_screen.dart';
 
@@ -22,6 +23,7 @@ class TalkBoxApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => ConversationProvider()),
         ChangeNotifierProvider(create: (_) => MessageProvider()),
         ChangeNotifierProvider(create: (_) => FriendProvider()),
+        ChangeNotifierProvider(create: (_) => BotProvider()),
       ],
       child: Consumer<AuthProvider>(
         builder: (context, auth, _) {

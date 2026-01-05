@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:file_picker/file_picker.dart';
 import '../providers/auth_provider.dart';
+import '../providers/conversation_provider.dart';
 import '../providers/message_provider.dart';
 import '../models/message.dart';
 import '../widgets/message_bubble.dart';
+import 'group_settings_screen.dart';
 
 class ChatScreen extends StatefulWidget {
   final String conversationId;
@@ -23,7 +25,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    _loadMessages();
+    _loadData();
     _scrollController.addListener(_onScroll);
   }
 
@@ -34,7 +36,8 @@ class _ChatScreenState extends State<ChatScreen> {
     super.dispose();
   }
 
-  Future<void> _loadMessages() async {
+  Future<void> _loadData() async {
+    await context.read<ConversationProvider>().fetchConversation(widget.conversationId);
     await context.read<MessageProvider>().fetchMessages(widget.conversationId);
     _scrollToBottom();
   }
@@ -116,15 +119,79 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  String _formatTimeGroup(DateTime time) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    final messageDay = DateTime(time.year, time.month, time.day);
+
+    if (messageDay == today) {
+      return '今天 ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    } else if (messageDay == yesterday) {
+      return '昨天 ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    } else if (now.year == time.year) {
+      return '${time.month}月${time.day}日 ${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+    } else {
+      return '${time.year}年${time.month}月${time.day}日';
+    }
+  }
+
+  bool _shouldShowTime(List<Message> messages, int index) {
+    if (index == 0) return true;
+    final current = messages[index].createdAt;
+    final previous = messages[index - 1].createdAt;
+    return current.difference(previous).inMinutes > 5;
+  }
+
   @override
   Widget build(BuildContext context) {
     final messageProvider = context.watch<MessageProvider>();
     final authProvider = context.watch<AuthProvider>();
+    final conversationProvider = context.watch<ConversationProvider>();
     final messages = messageProvider.getMessages(widget.conversationId);
+    final conversation = conversationProvider.currentConversation;
+
+    final isGroup = conversation?.isGroup ?? false;
+    String title = '聊天';
+    if (conversation != null) {
+      if (isGroup) {
+        title = conversation.name.isNotEmpty ? conversation.name : '群聊';
+      } else {
+        final other = conversation.members?.firstWhere(
+          (m) => m.user.id != authProvider.user?.id,
+          orElse: () => conversation.members!.first,
+        );
+        title = other?.user.nickname ?? '私聊';
+      }
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('聊天'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title),
+            if (isGroup && conversation?.members != null)
+              Text(
+                '${conversation!.members!.length} 人',
+                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+              ),
+          ],
+        ),
+        actions: [
+          if (isGroup)
+            IconButton(
+              icon: const Icon(Icons.settings),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => GroupSettingsScreen(conversationId: widget.conversationId),
+                  ),
+                );
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -138,11 +205,27 @@ class _ChatScreenState extends State<ChatScreen> {
                     itemBuilder: (context, index) {
                       final msg = messages[index];
                       final isSelf = msg.sender.id == authProvider.user?.id && !msg.sender.isBot;
+                      final showTime = _shouldShowTime(messages, index);
 
-                      return MessageBubble(
-                        message: msg,
-                        isSelf: isSelf,
-                        onReply: () => setState(() => _replyTo = msg),
+                      return Column(
+                        children: [
+                          if (showTime)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Text(
+                                _formatTimeGroup(msg.createdAt),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.grey.shade500,
+                                ),
+                              ),
+                            ),
+                          MessageBubble(
+                            message: msg,
+                            isSelf: isSelf,
+                            onReply: () => setState(() => _replyTo = msg),
+                          ),
+                        ],
                       );
                     },
                   ),

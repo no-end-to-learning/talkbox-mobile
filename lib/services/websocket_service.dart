@@ -11,8 +11,10 @@ class WebSocketService {
   WebSocketChannel? _channel;
   Timer? _pingTimer;
   bool _isConnected = false;
+  bool _isConnecting = false;
   int _reconnectAttempts = 0;
   static const int _maxReconnectAttempts = 5;
+  String? _currentToken;
 
   Function(Map<String, dynamic>)? onMessage;
   Function(Map<String, dynamic>)? onMentioned;
@@ -21,7 +23,9 @@ class WebSocketService {
   bool get isConnected => _isConnected;
 
   void connect(String token) {
-    if (_isConnected) return;
+    if (_isConnected || _isConnecting) return;
+    _isConnecting = true;
+    _currentToken = token;
 
     final wsUrl = ApiService.baseUrl.replaceFirst('http', 'ws') + '/ws?token=$token';
 
@@ -30,28 +34,40 @@ class WebSocketService {
 
       _channel!.stream.listen(
         (data) {
+          // 收到第一条消息时确认连接成功
+          if (!_isConnected) {
+            _isConnected = true;
+            _isConnecting = false;
+            _reconnectAttempts = 0;
+            onConnectionChanged?.call(true);
+            _startPing();
+          }
+
           final msg = jsonDecode(data);
           _handleMessage(msg);
         },
         onError: (error) {
           print('WebSocket error: $error');
           _disconnect();
-          _tryReconnect(token);
+          _tryReconnect();
         },
         onDone: () {
           print('WebSocket closed');
           _disconnect();
-          _tryReconnect(token);
+          _tryReconnect();
         },
       );
 
-      _isConnected = true;
-      _reconnectAttempts = 0;
-      onConnectionChanged?.call(true);
-      _startPing();
+      // 发送初始 ping 来确认连接
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (_isConnecting && !_isConnected) {
+          send({'action': 'ping'});
+        }
+      });
     } catch (e) {
       print('WebSocket connect error: $e');
-      _tryReconnect(token);
+      _isConnecting = false;
+      _tryReconnect();
     }
   }
 
@@ -77,15 +93,16 @@ class WebSocketService {
 
   void _disconnect() {
     _isConnected = false;
+    _isConnecting = false;
     _pingTimer?.cancel();
     _channel?.sink.close();
     _channel = null;
     onConnectionChanged?.call(false);
   }
 
-  void _tryReconnect(String token) {
-    if (_reconnectAttempts >= _maxReconnectAttempts) {
-      print('Max reconnect attempts reached');
+  void _tryReconnect() {
+    if (_reconnectAttempts >= _maxReconnectAttempts || _currentToken == null) {
+      print('Max reconnect attempts reached or no token');
       return;
     }
 
@@ -93,7 +110,9 @@ class WebSocketService {
     print('Reconnecting... attempt $_reconnectAttempts');
 
     Future.delayed(const Duration(seconds: 3), () {
-      connect(token);
+      if (_currentToken != null) {
+        connect(_currentToken!);
+      }
     });
   }
 
@@ -115,6 +134,7 @@ class WebSocketService {
 
   void disconnect() {
     _reconnectAttempts = _maxReconnectAttempts;
+    _currentToken = null;
     _disconnect();
   }
 }
