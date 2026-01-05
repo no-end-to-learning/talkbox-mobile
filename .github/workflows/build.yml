@@ -31,14 +31,12 @@ jobs:
       - name: Setup Android local.properties
         run: |
           FLUTTER_SDK=$(dirname $(dirname $(which flutter)))
-          echo "Flutter SDK path: $FLUTTER_SDK"
-          echo "flutter.sdk=$FLUTTER_SDK" > android/local.properties
+          echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          echo "flutter.sdk=$FLUTTER_SDK" >> android/local.properties
+          echo "=== local.properties ==="
           cat android/local.properties
-
-      - name: Setup Gradle Cache
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          cache-read-only: ${{ github.ref != 'refs/heads/master' }}
+          echo "=== Verify Flutter SDK ==="
+          ls -la "$FLUTTER_SDK/packages/flutter_tools/gradle" || echo "Gradle tools not found!"
 
       - name: Get dependencies
         run: flutter pub get
