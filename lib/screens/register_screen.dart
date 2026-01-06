@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 
 class RegisterScreen extends StatefulWidget {
-  const RegisterScreen({super.key});
+  final String? serverUrl;
+
+  const RegisterScreen({super.key, this.serverUrl});
 
   @override
   State<RegisterScreen> createState() => _RegisterScreenState();
@@ -11,6 +14,7 @@ class RegisterScreen extends StatefulWidget {
 
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _serverUrlController = TextEditingController();
   final _usernameController = TextEditingController();
   final _nicknameController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -18,7 +22,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedData();
+  }
+
+  Future<void> _loadSavedData() async {
+    // 优先使用从登录页传来的服务器地址，否则从本地读取
+    final serverUrl = widget.serverUrl ?? await ApiService.getSavedServerUrl();
+    if (mounted) {
+      setState(() {
+        _serverUrlController.text = serverUrl;
+      });
+    }
+  }
+
+  @override
   void dispose() {
+    _serverUrlController.dispose();
     _usernameController.dispose();
     _nicknameController.dispose();
     _passwordController.dispose();
@@ -35,6 +56,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
 
     setState(() => _error = null);
+
+    // 保存服务器地址和凭据
+    final url = _serverUrlController.text.replaceAll(RegExp(r'/+$'), '');
+    await ApiService.setBaseUrl(url);
+    await ApiService.saveCredentials(
+      _usernameController.text,
+      _passwordController.text,
+    );
 
     try {
       await context.read<AuthProvider>().register(
@@ -77,6 +106,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 32),
+                      TextFormField(
+                        controller: _serverUrlController,
+                        decoration: const InputDecoration(
+                          labelText: '服务器地址',
+                          hintText: 'https://talkbox.qiujun.me',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.url,
+                        validator: (v) => v?.isEmpty == true ? '请输入服务器地址' : null,
+                      ),
+                      const SizedBox(height: 16),
                       TextFormField(
                         controller: _usernameController,
                         decoration: const InputDecoration(

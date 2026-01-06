@@ -1,9 +1,10 @@
 import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+const String defaultServerUrl = 'https://talkbox.qiujun.me';
+
 class ApiService {
-  // 可配置的服务器地址，从 SharedPreferences 读取或使用默认值
-  static String _baseUrl = 'http://localhost:8080';
+  static String _baseUrl = defaultServerUrl;
 
   static String get baseUrl => _baseUrl;
 
@@ -21,6 +22,25 @@ class ApiService {
       _baseUrl = savedUrl;
       _instance._updateBaseUrl(savedUrl);
     }
+  }
+
+  static Future<String> getSavedServerUrl() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString('server_url') ?? defaultServerUrl;
+  }
+
+  static Future<Map<String, String>> getSavedCredentials() async {
+    final prefs = await SharedPreferences.getInstance();
+    return {
+      'username': prefs.getString('saved_username') ?? '',
+      'password': prefs.getString('saved_password') ?? '',
+    };
+  }
+
+  static Future<void> saveCredentials(String username, String password) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('saved_username', username);
+    await prefs.setString('saved_password', password);
   }
 
   late Dio _dio;

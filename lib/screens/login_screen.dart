@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../services/api_service.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -12,12 +13,32 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _serverUrlController = TextEditingController();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _loadSavedData();
+  }
+
+  Future<void> _loadSavedData() async {
+    final serverUrl = await ApiService.getSavedServerUrl();
+    final credentials = await ApiService.getSavedCredentials();
+    if (mounted) {
+      setState(() {
+        _serverUrlController.text = serverUrl;
+        _usernameController.text = credentials['username'] ?? '';
+        _passwordController.text = credentials['password'] ?? '';
+      });
+    }
+  }
+
+  @override
   void dispose() {
+    _serverUrlController.dispose();
     _usernameController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -27,6 +48,14 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!_formKey.currentState!.validate()) return;
 
     setState(() => _error = null);
+
+    // 保存服务器地址和凭据
+    final url = _serverUrlController.text.replaceAll(RegExp(r'/+$'), '');
+    await ApiService.setBaseUrl(url);
+    await ApiService.saveCredentials(
+      _usernameController.text,
+      _passwordController.text,
+    );
 
     try {
       await context.read<AuthProvider>().login(
@@ -68,6 +97,17 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 32),
                       TextFormField(
+                        controller: _serverUrlController,
+                        decoration: const InputDecoration(
+                          labelText: '服务器地址',
+                          hintText: 'https://talkbox.qiujun.me',
+                          border: OutlineInputBorder(),
+                        ),
+                        keyboardType: TextInputType.url,
+                        validator: (v) => v?.isEmpty == true ? '请输入服务器地址' : null,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
                         controller: _usernameController,
                         decoration: const InputDecoration(
                           labelText: '用户名',
@@ -108,7 +148,9 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                            MaterialPageRoute(builder: (_) => RegisterScreen(
+                              serverUrl: _serverUrlController.text,
+                            )),
                           );
                         },
                         child: const Text('还没有账号？立即注册'),
