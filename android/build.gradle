@@ -5,23 +5,12 @@ allprojects {
     }
 }
 
-// Provide flutter extension for plugins that expect it at root level
-ext.flutter = [
-    compileSdkVersion: 36,
-    minSdkVersion: 24,
-    targetSdkVersion: 35,
-    ndkVersion: "27.0.12077973"
-]
+rootProject.buildDir = "../build"
 
 subprojects {
-    // Provide flutter extension for each subproject (plugins need this)
-    project.ext.flutter = rootProject.ext.flutter
-
     project.buildDir = "${rootProject.buildDir}/${project.name}"
     project.evaluationDependsOn(":app")
 }
-
-rootProject.buildDir = "../build"
 
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
